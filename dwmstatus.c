@@ -152,7 +152,7 @@ main(void)
 		time = mktimes("%m-%d %l:%M %p");
 		temp0 = gettemperature("/sys/class/hwmon/hwmon0", "temp1_input");
 
-		status = smprintf("%s | L:%s | %s | %s",
+		status = smprintf("%s | %s | %s | %s",
 				temp0, avgs, bat, time);
 		setstatus(status);
 
