@@ -73,12 +73,12 @@ setstatus(char *str)
 char *
 loadavg(void)
 {
-	double avgs[3];
+	double avgs[1];
 
-	if (getloadavg(avgs, 3) < 0)
+	if (getloadavg(avgs, 1) < 0)
 		return smprintf("");
 
-	return smprintf("%.2f %.2f %.2f", avgs[0], avgs[1], avgs[2]);
+	return smprintf("%.2f", avgs[0]);
 }
 
 char *
