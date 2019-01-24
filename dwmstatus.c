@@ -12,13 +12,16 @@
 #include <strings.h>
 #include <sys/time.h>
 #include <time.h>
+#include <sys/statvfs.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include <X11/Xlib.h>
 
+#define DELAY	5
+#define GB	1073741824
+
 #define BATT_PATH "/sys/class/power_supply/BAT0/"
-#define DELAY		5
 
 static Display *dpy;
 
@@ -123,6 +126,15 @@ getbattery(char *base)
 }
 
 char *
+freespace(void)
+{
+    struct statvfs vfs;
+
+    statvfs("/", &vfs);
+    return smprintf("%.2f GB", (double)(vfs.f_bfree * vfs.f_bsize) / GB);
+}
+
+char *
 gettemperature(char *base, char *sensor)
 {
 	char *co;
@@ -139,6 +151,7 @@ main(void)
 	char *status;
 	char *avgs;
 	char *bat;
+	char *space;
 	char *time;
 	char *temp0;
 
@@ -152,14 +165,16 @@ main(void)
 		bat = getbattery("/sys/class/power_supply/BAT0");
 		time = mktimes("%m-%d %l:%M %p");
 		temp0 = gettemperature("/sys/class/hwmon/hwmon0", "temp1_input");
+		space = freespace();
 
-		status = smprintf("%s | %s | %s | %s",
-				temp0, avgs, bat, time);
+		status = smprintf("%s | %s | %s | %s | %s",
+				temp0, avgs, space, bat, time);
 		setstatus(status);
 
 		free(temp0);
 		free(avgs);
 		free(bat);
+		free(space);
 		free(time);
 		free(status);
 	}
