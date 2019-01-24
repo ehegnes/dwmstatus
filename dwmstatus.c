@@ -139,7 +139,7 @@ main(void)
 	char *avgs;
 	char *bat;
 	char *time;
-	char *t0, *t1, *t2;
+	char *temp0;
 
 	if (!(dpy = XOpenDisplay(NULL))) {
 		fprintf(stderr, "dwmstatus: cannot open display.\n");
@@ -150,17 +150,13 @@ main(void)
 		avgs = loadavg();
 		bat = getbattery("/sys/class/power_supply/BAT0");
 		time = mktimes("%m-%d %l:%M %p");
-		t0 = gettemperature("/sys/devices/virtual/hwmon/hwmon0", "temp1_input");
-		t1 = gettemperature("/sys/devices/virtual/hwmon/hwmon2", "temp1_input");
-		t2 = gettemperature("/sys/devices/virtual/hwmon/hwmon4", "temp1_input");
+		temp0 = gettemperature("/sys/class/hwmon/hwmon0", "temp1_input");
 
-		status = smprintf("T:%s|%s|%s L:%s | %s | %s",
-				t0, t1, t2, avgs, bat, time);
+		status = smprintf("%s | L:%s | %s | %s",
+				temp0, avgs, bat, time);
 		setstatus(status);
 
-		free(t0);
-		free(t1);
-		free(t2);
+		free(temp0);
 		free(avgs);
 		free(bat);
 		free(time);
