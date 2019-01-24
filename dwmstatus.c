@@ -17,6 +17,8 @@
 
 #include <X11/Xlib.h>
 
+#define BATT_PATH "/sys/class/power_supply/BAT0/"
+
 static Display *dpy;
 
 char *
@@ -105,52 +107,18 @@ readfile(char *base, char *file)
 char *
 getbattery(char *base)
 {
-	char *co, status;
-	int descap, remcap;
+	int battery;
+	char status;
+	FILE *fin;
 
-	descap = -1;
-	remcap = -1;
+	fin = fopen(BATT_PATH"capacity", "r");
+	fscanf(fin, "%d\n", &battery);
+	fclose(fin);
+	fin = fopen(BATT_PATH"status", "r");
+	fscanf(fin, "%c\n", &status);
+	fclose(fin);
 
-	co = readfile(base, "present");
-	if (co == NULL)
-		return smprintf("");
-	if (co[0] != '1') {
-		free(co);
-		return smprintf("not present");
-	}
-	free(co);
-
-	co = readfile(base, "charge_full_design");
-	if (co == NULL) {
-		co = readfile(base, "energy_full_design");
-		if (co == NULL)
-			return smprintf("");
-	}
-	sscanf(co, "%d", &descap);
-	free(co);
-
-	co = readfile(base, "charge_now");
-	if (co == NULL) {
-		co = readfile(base, "energy_now");
-		if (co == NULL)
-			return smprintf("");
-	}
-	sscanf(co, "%d", &remcap);
-	free(co);
-
-	co = readfile(base, "status");
-	if (!strncmp(co, "Discharging", 11)) {
-		status = '-';
-	} else if(!strncmp(co, "Charging", 8)) {
-		status = '+';
-	} else {
-		status = '?';
-	}
-
-	if (remcap < 0 || descap < 0)
-		return smprintf("invalid");
-
-	return smprintf("%.0f%%%c", ((float)remcap / (float)descap) * 100, status);
+	return smprintf("%c %d%%", status, battery);
 }
 
 char *
@@ -186,7 +154,7 @@ main(void)
 		t1 = gettemperature("/sys/devices/virtual/hwmon/hwmon2", "temp1_input");
 		t2 = gettemperature("/sys/devices/virtual/hwmon/hwmon4", "temp1_input");
 
-		status = smprintf("T:%s|%s|%s L:%s B:%s | %s",
+		status = smprintf("T:%s|%s|%s L:%s | %s | %s",
 				t0, t1, t2, avgs, bat, time);
 		setstatus(status);
 
