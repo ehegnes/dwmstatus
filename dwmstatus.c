@@ -18,6 +18,7 @@
 #include <X11/Xlib.h>
 
 #define BATT_PATH "/sys/class/power_supply/BAT0/"
+#define DELAY		5
 
 static Display *dpy;
 
@@ -146,7 +147,7 @@ main(void)
 		return 1;
 	}
 
-	for (;;sleep(60)) {
+	for (;;sleep(DELAY)) {
 		avgs = loadavg();
 		bat = getbattery("/sys/class/power_supply/BAT0");
 		time = mktimes("%m-%d %l:%M %p");
