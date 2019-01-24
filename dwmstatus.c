@@ -4,6 +4,8 @@
  */
 
 #define _BSD_SOURCE
+#include <ifaddrs.h>
+#include <netdb.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +22,7 @@
 
 #define DELAY	5
 #define GB	1073741824
+#define IF_NAME "wlp0s20f3"
 
 static Display *dpy;
 
@@ -152,6 +155,32 @@ gettemperature(char *base, char *sensor)
 	return smprintf("%02.0f°C", atof(co) / 1000);
 }
 
+char *
+ipaddr(void)
+{
+	struct ifaddrs *ifaddr, *ifa;
+	char host[NI_MAXHOST] = "NULL";
+
+	if (getifaddrs(&ifaddr) == -1) {
+		perror("getifaddrs");
+		exit(1);
+	}
+
+	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+		if (strcmp(ifa->ifa_name, IF_NAME) != 0 ||
+				ifa->ifa_addr->sa_family != AF_INET)
+			continue;
+		if (getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in),
+					host, NI_MAXHOST, NULL, 0,
+					NI_NUMERICHOST) != 0) {
+			perror("getnameinfo");
+			exit(1);
+		}
+	}
+	freeifaddrs(ifaddr);
+	return smprintf("%s: %s", IF_NAME, host);
+}
+
 int
 main(void)
 {
@@ -161,6 +190,7 @@ main(void)
 	char *space;
 	char *time;
 	char *temp0;
+	char *wifi;
 
 	if (!(dpy = XOpenDisplay(NULL))) {
 		fprintf(stderr, "dwmstatus: cannot open display.\n");
@@ -173,9 +203,10 @@ main(void)
 		time = mktimes("%m-%d %l:%M %p");
 		temp0 = gettemperature("/sys/class/hwmon/hwmon0", "temp1_input");
 		space = freespace();
+		wifi = ipaddr();
 
-		status = smprintf("%s | %s | %s | %s | %s",
-				temp0, avgs, space, bat, time);
+		status = smprintf("%s | %s | %s | %s | %s | %s",
+				wifi, temp0, avgs, space, bat, time);
 		setstatus(status);
 
 		free(temp0);
@@ -184,6 +215,7 @@ main(void)
 		free(space);
 		free(time);
 		free(status);
+		free(wifi);
 	}
 
 	XCloseDisplay(dpy);
