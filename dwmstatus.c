@@ -21,8 +21,6 @@
 #define DELAY	5
 #define GB	1073741824
 
-#define BATT_PATH "/sys/class/power_supply/BAT0/"
-
 static Display *dpy;
 
 char *
@@ -111,18 +109,23 @@ readfile(char *base, char *file)
 char *
 getbattery(char *base)
 {
-	int battery;
+	char *co;
+	int capacity;
 	char status;
-	FILE *fin;
 
-	fin = fopen(BATT_PATH"capacity", "r");
-	fscanf(fin, "%d\n", &battery);
-	fclose(fin);
-	fin = fopen(BATT_PATH"status", "r");
-	fscanf(fin, "%c\n", &status);
-	fclose(fin);
+	if ((co = readfile(base, "capacity")) == NULL) {
+		return smprintf("");
+	}
+	sscanf(co, "%d", &capacity);
+	free(co);
 
-	return smprintf("%c %d%%", status, battery);
+	if ((co = readfile(base, "status")) == NULL) {
+		return smprintf("");
+	}
+	sscanf(co, "%c", &status);
+	free(co);
+
+	return smprintf("%c %d%%", status, capacity);
 }
 
 char *
