@@ -128,10 +128,14 @@ getbattery(char *base)
 char *
 freespace(void)
 {
-    struct statvfs vfs;
+	struct statvfs vfs;
 
-    statvfs("/", &vfs);
-    return smprintf("%.2f GB", (double)(vfs.f_bfree * vfs.f_bsize) / GB);
+	if (statvfs("/", &vfs) < 0) {
+		perror("statvfs");
+		exit(1);
+	}
+
+	return smprintf("%.2f GB", (double)(vfs.f_bfree * vfs.f_bsize) / GB);
 }
 
 char *
