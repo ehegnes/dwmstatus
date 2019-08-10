@@ -115,6 +115,7 @@ getbattery(char *base)
 	char *co;
 	int capacity;
 	char status;
+	int wattage;
 
 	if ((co = readfile(base, "capacity")) == NULL) {
 		return smprintf("");
@@ -128,7 +129,13 @@ getbattery(char *base)
 	sscanf(co, "%c", &status);
 	free(co);
 
-	return smprintf("%c %d%%", status, capacity);
+	if ((co = readfile(base, "power_now")) == NULL) {
+		return smprintf("");
+	}
+	sscanf(co, "%d", &wattage);
+	free(co);
+
+	return smprintf("%c %d%% (%.1fW)", status, capacity, (double)wattage/1000000.0);
 }
 
 char *
