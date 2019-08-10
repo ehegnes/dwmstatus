@@ -211,7 +211,7 @@ main(void)
 	for (;;sleep(DELAY)) {
 		avgs = loadavg();
 		bat = getbattery("/sys/class/power_supply/BAT0");
-		time = mktimes("%m-%d %l:%M %p");
+		time = mktimes("%m-%d %I:%M %p");
 		temp0 = gettemperature("/sys/class/hwmon/hwmon0", "temp1_input");
 		space = freespace();
 		wifi = ipaddr();
